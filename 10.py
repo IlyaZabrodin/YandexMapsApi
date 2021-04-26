@@ -12,38 +12,25 @@ import math
 SCREEN_SIZE = [900, 700]
 
 
-class MapParams():
-    def __init__(self):
-        self.latitude, self.longitude, self.st = 55.703118, 37.530887, 0.01
-        self.zoom = 16
-        self.layer = "map"
-        self.pt = ""
-
-    def update(self, event):
-        if event.key() == QtCore.Qt.Key_PageUp and self.zoom > 2:
-            self.zoom -= 1
-        elif event.key() == QtCore.Qt.Key_PageDown and self.zoom < 19:
-            self.zoom += 1
-        elif event.key() == QtCore.Qt.Key_Left:
-            self.longitude -= self.st * math.pow(2, 15 - self.zoom)
-            if self.longitude < -180:
-                self.longitude += 360
-        elif event.key() == QtCore.Qt.Key_Right:
-            self.longitude += self.st * math.pow(2, 15 - self.zoom)
-            if self.longitude > 180:
-                self.longitude -= 360
-        elif event.key() == QtCore.Qt.Key_Up and -85 <= self.latitude + self.st * math.pow(2, 15 - self.zoom) <= 85:
-            self.latitude += self.st * math.pow(2, 15 - self.zoom)
-        elif event.key() == QtCore.Qt.Key_Down and -85 <= self.latitude - self.st * math.pow(2, 15 - self.zoom) <= 85:
-            self.latitude -= self.st * math.pow(2, 15 - self.zoom)
-
-
 class WorkMap(QMainWindow):
     def __init__(self):
         super().__init__()
         uic.loadUi('10.ui', self)
         self.initUI()
         self.showIm()
+
+    def initUI(self):
+        self.setGeometry(100, 100, *SCREEN_SIZE)
+        self.setWindowTitle('Отображение карты')
+        self.search_btn.clicked.connect(self.search)
+        self.hide_search_btn.clicked.connect(self.hide_search)
+        self.search_edit.setFocusPolicy(Qt.ClickFocus)
+        self.mp = MapParams()
+        self.map_layer.addItem("схема")
+        self.map_layer.addItem("спутник")
+        self.map_layer.addItem("гибрид")
+        self.map_layer.currentTextChanged.connect(self.change)
+        self.postaddress_checkBox.stateChanged.connect(self.updatesearch)
 
     def showIm(self):
         params = {
@@ -67,28 +54,6 @@ class WorkMap(QMainWindow):
 
         self.pixmap = QPixmap(self.map_file)
         self.image.setPixmap(self.pixmap)
-
-    def initUI(self):
-        self.setGeometry(100, 100, *SCREEN_SIZE)
-        self.setWindowTitle('Отображение карты')
-        self.search_btn.clicked.connect(self.search)
-        self.hide_search_btn.clicked.connect(self.hide_search)
-        self.search_edit.setFocusPolicy(Qt.ClickFocus)
-        self.mp = MapParams()
-        self.map_layer.addItem("схема")
-        self.map_layer.addItem("спутник")
-        self.map_layer.addItem("гибрид")
-        self.map_layer.currentTextChanged.connect(self.change)
-        self.postaddress_checkBox.stateChanged.connect(self.updatesearch)
-
-    def hide_search(self):
-        self.mp.pt = ""
-        self.address.setText("")
-        self.search_edit.clear()
-        self.showIm()
-
-    def updatesearch(self):
-        self.search()
 
     def search(self):
         if self.search_edit.text() == "":
@@ -121,6 +86,15 @@ class WorkMap(QMainWindow):
             print("Http статус:", response.status_code, "(", response.reason, ")")
         self.showIm()
 
+    def hide_search(self):
+        self.mp.pt = ""
+        self.address.setText("")
+        self.search_edit.clear()
+        self.showIm()
+
+    def updatesearch(self):
+        self.search()
+
     def change(self, layer):
         if layer == "схема":
             self.mp.layer = "map"
@@ -130,13 +104,39 @@ class WorkMap(QMainWindow):
             self.mp.layer = "sat,skl"
         self.showIm()
 
-    def closeEvent(self, event):
-        os.remove(self.map_file)
-
     def keyPressEvent(self, event):
         self.mp.update(event)
         event.accept()
         self.showIm()
+
+    def closeEvent(self, event):
+        os.remove(self.map_file)
+
+
+class MapParams():
+    def __init__(self):
+        self.latitude, self.longitude, self.st = 55.703118, 37.530887, 0.01
+        self.zoom = 16
+        self.layer = "map"
+        self.pt = ""
+
+    def update(self, event):
+        if event.key() == QtCore.Qt.Key_PageUp and self.zoom > 2:
+            self.zoom -= 1
+        elif event.key() == QtCore.Qt.Key_PageDown and self.zoom < 19:
+            self.zoom += 1
+        elif event.key() == QtCore.Qt.Key_Left:
+            self.longitude -= self.st * math.pow(2, 15 - self.zoom)
+            if self.longitude < -180:
+                self.longitude += 360
+        elif event.key() == QtCore.Qt.Key_Right:
+            self.longitude += self.st * math.pow(2, 15 - self.zoom)
+            if self.longitude > 180:
+                self.longitude -= 360
+        elif event.key() == QtCore.Qt.Key_Up and -85 <= self.latitude + self.st * math.pow(2, 15 - self.zoom) <= 85:
+            self.latitude += self.st * math.pow(2, 15 - self.zoom)
+        elif event.key() == QtCore.Qt.Key_Down and -85 <= self.latitude - self.st * math.pow(2, 15 - self.zoom) <= 85:
+            self.latitude -= self.st * math.pow(2, 15 - self.zoom)
 
 
 if __name__ == '__main__':
