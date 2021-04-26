@@ -95,7 +95,6 @@ class WorkMap(QMainWindow):
             json_response = response.json()
             toponym = json_response["response"]["GeoObjectCollection"]["featureMember"][0]["GeoObject"]
             toponym_coodrinates = toponym["Point"]["pos"].split()
-            # Печатаем извлечённые из ответа поля:
             self.mp.latitude = float(toponym_coodrinates[1])
             self.mp.longitude = float(toponym_coodrinates[0])
             self.mp.pt = ",".join([str(self.mp.longitude), str(self.mp.latitude), "pm2rdm"])
